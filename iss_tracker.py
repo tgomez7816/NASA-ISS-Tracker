@@ -1,19 +1,21 @@
 import json
 import xml.etree.ElementTree as ET
-import math
 from datetime import datetime, timezone
 import os
 import requests
 from typing import List, Dict, Any
 from flask import Flask, jsonify, request
 import redis
+from geopy.geocoders import Nominatim
+import math
+from math import atan2, sqrt, degrees
 
-# Initialize Redis connection
-redis_host = os.getenv('REDIS_HOST', 'localhost')  # Use environment variable for Redis host
-redis_port = int(os.getenv('REDIS_PORT', 6379))    # Default Redis port
+#Redis connection
+redis_host = os.getenv('REDIS_HOST', 'localhost')
+redis_port = int(os.getenv('REDIS_PORT', 6379))    # port
 try:
     redis_client = redis.StrictRedis(host=redis_host, port=redis_port, decode_responses=True)
-    redis_client.ping()  # Test the connection
+    redis_client.ping()  # test connection
 except redis.exceptions.ConnectionError as e:
     raise Exception(f"Failed to connect to Redis: {e}")
 
@@ -75,8 +77,9 @@ def fetch_iss_data(url: str) -> List[Dict[str, Any]]:
                 'VELOCITY': velocity,
                 }))
 
-        return data 
         print(f"Stored {len(data)} state vectors in Redis.")
+        return data
+
     except requests.RequestException as e:
         raise Exception(f"Failed to fetch data from NASA: {e}")
     except ET.ParseError as e:
@@ -105,10 +108,10 @@ def find_closest_epoch(data: List[Dict[str, Any]], current_time: datetime) -> Di
     Returns:
         Data entry with the closest epoch
     '''
-        # Ensure current_time is offset-aware
+    #current_time is offset-aware -> include further explanation in write up
     current_time = current_time.replace(tzinfo=timezone.utc)
 
-    # Find the closest epoch
+    # find the closest epoch
     return min(data, key=lambda x: abs(datetime.strptime(x['EPOCH'], "%Y-%jT%H:%M:%S.%f%z") - current_time))
 
 @app.route('/', methods=['GET'])
@@ -179,32 +182,105 @@ def get_epoch_speed(epoch):
     return jsonify({'error': 'No speed found'}), 404
 
 @app.route('/now', methods=['GET'])
-def get_nearest_epoch():
+def get_nearest_epoch_location():
     '''
-    Returns the epoch closest to current time
+    Returns the latitude, longitude, altitude, and geoposition for the real-time position of the ISS.
     '''
-    # Make current_time offset-aware by adding UTC timezone
+    #make current_time offset-aware by adding UTC timezone
     current_time = datetime.utcnow().replace(tzinfo=timezone.utc)
 
+    #gets all epochs from Redis
     keys = redis_client.keys()
     if not keys:
-        return jsonify({'error': 'No ISS data available'}), 500
+        return jsonify({'error': 'No ISS data available'}), 404  #error if Redis is empty
 
-    # Find the closest epoch
-    closest_epoch = min(keys, key=lambda epoch:
-        abs(datetime.fromisoformat(epoch.replace('Z', '+00:00')) - current_time))
+    try:
+        #find the closest epoch to the current time
+        closest_epoch = min(
+            keys,
+            key=lambda epoch: abs(
+                datetime.fromisoformat(epoch.replace('Z', '+00:00')) - current_time
+            )
+        )
 
-    data = redis_client.get(closest_epoch)
-    if data:
-        return jsonify(json.loads(data))
-    return jsonify({'error': 'No data found for the closest epoch'}), 500
+        #gets state vector for the closest epoch
+        data = redis_client.get(closest_epoch)
+        if not data:
+            return jsonify({'error': 'No data found for the closest epoch'}), 404
+
+        #parse the data
+        data = json.loads(data)
+        position = data['POSITION']
+        x = position['X']
+        y = position['Y']
+        z = position['Z']
+
+        #calculate latitude, longitude, and altitude
+        earth_radius = 6371  # radius in km
+        latitude = degrees(atan2(z, sqrt(x**2 + y**2)))  # degrees
+        longitude = degrees(atan2(y, x))
+        altitude = sqrt(x**2 + y**2 + z**2) - earth_radius  # altitude
+
+        # GeoPy to get the geoposition
+        geolocator = Nominatim(user_agent="iss_tracker")
+        location = geolocator.reverse((latitude, longitude), language='en')
+        geoposition = location.address if location else "Unknown location"
+
+        return jsonify({
+            'latitude': latitude,
+            'longitude': longitude,
+            'altitude': altitude,
+            'geoposition': geoposition,
+            'EPOCH': closest_epoch
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': f'Unexpected error: {str(e)}'}), 500
+
+@app.route('/epochs/<epoch>/location', methods=['GET'])
+def get_epoch_location(epoch):
+    '''
+    Returns latitude, longitude, altitude, and geoposition for a given epoch.
+    '''
+    #get the state vector for the given epoch from Redis
+    data = redis_client.get(epoch)
+    if not data:
+        return jsonify({'error': 'Epoch not found'}), 404
+
+    try:
+        # parse the data
+        data = json.loads(data)
+        position = data['POSITION']
+        x = position['X']
+        y = position['Y']
+        z = position['Z']
+
+        # calculate latitude, longitude, and altitude
+        earth_radius = 6371  
+        latitude = degrees(atan2(z, sqrt(x**2 + y**2)))  
+        longitude = degrees(atan2(y, x))
+        altitude = sqrt(x**2 + y**2 + z**2) - earth_radius
+
+        geolocator = Nominatim(user_agent="iss_tracker")
+        location = geolocator.reverse((latitude, longitude), language='en')
+
+        return jsonify({
+            'latitude': latitude,
+            'longitude': longitude,
+            'altitude': altitude,
+            'geoposition': geoposition
+        }), 200
+
+    except Exception as e:
+        #unexpected errors
+        return jsonify({'error': f'Unexpected error: {str(e)}'}), 500
 
 def main():
     NASA_URL = "https://nasa-public-data.s3.amazonaws.com/iss-coords/current/ISS_OEM/ISS.OEM_J2K_EPH.xml"
 
     try:
         print("Fetching ISS data from NASA...")
-        fetch_iss_data(NASA_URL)  # Fetch and store data in Redis
+        fetch_iss_data(NASA_URL)  # get data and store data in Redis
         print("ISS data successfully loaded into Redis.")
         app.run(debug=True, host='0.0.0.0', port=5000)
     except Exception as e:
