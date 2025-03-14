@@ -1,18 +1,17 @@
 # International Space Station Tracker Data Analysis 
 
-DIRECTLY FROM HW5 NEEDS UPDATES
-This directory contains a Python script that processes data from an XML file containing vector information about the position and velocity of the International Space Station (ISS). The script includes functions to parse the XML file, calculate the speed of the ISS, and find the closest timestamp (EPOCH) to a given time. The code implements a Flask-based REST API that tracks the International Space Station's (ISS) trajectory using NASA's public data.
+This directory contains a Python scripts that processes data from NASA's Spot the Station website containing vector information about the position and velocity of the International Space Station. The script includes functions to analyze the data, such as, parse the XML file, calculate the speed of the ISS, and find the closest timestamp (EPOCH) to a given time. The code implements a Flask-based REST API with dedicated routes that allow you to navigate the data easily.
 
 # Script Overview
 
 Many of the scripts within this repository are interlinked and will be discussed as they are grouped.
 
 ### Docker Compose Related Files
-- **`Dockerfile`**
+- **`Dockerfile`**: this file creates an image for the application using the working directory and the necessary dependencies listed in the `requirements.txt` file.
 
 - **`docker-compose.yml`**
 
-- **`requirements.txt`**
+- **`requirements.txt`**: this file contains all the required dependencies need to create a suitable Docker environment for the application. 
 
 ### Main Function and Test Files
 - **`iss_tracker.py`**
