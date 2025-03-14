@@ -1,27 +1,64 @@
 # International Space Station Tracker Data Analysis 
 
-Short Summary of Repository
+DIRECTLY FROM HW5 NEEDS UPDATES
+This directory contains a Python script that processes data from an XML file containing vector information about the position and velocity of the International Space Station (ISS). The script includes functions to parse the XML file, calculate the speed of the ISS, and find the closest timestamp (EPOCH) to a given time. The code implements a Flask-based REST API that tracks the International Space Station's (ISS) trajectory using NASA's public data.
 
 # Script Overview
 
 Many of the scripts within this repository are interlinked and will be discussed as they are grouped.
 
 ### Docker Compose Related Files
-- **Dockerfile**
+- **`Dockerfile`**
 
-- **docker-compose.yml**
+- **`docker-compose.yml`**
 
-- **requirements.txt**
+- **`requirements.txt`**
 
-## Main Function and Test Files
-### iss_tracker.py
-### test_iss_tracker.py
+### Main Function and Test Files
+- **`iss_tracker.py`**
+    This script includes multiple functions and routes that are used to analyze/navigate the ISS data.
+
+    Functions included:
+         1. 
+
+- **`test_iss_tracker.py`**
+    This file includes all of the unit tests to evaluate the functionality of each function and route availible in the iss_tracker.py script. It also includes test related to general Redis connection (which are the first tests conducted). If this test fails other Redis dependent tests, such as any route test will fail.
 
 # Instructions to Deploy Application using Docker-Compose
+GENERAL INSTRUCTIONS NEED SPECIFICATION
+
+1. Build Docker Images
+
+2. Start It Up
+
+3. Verify Deployment
+
+4. Stop Services
 
 # Instructions to Curl all Routes
 
+1. /epochs
+
+2. /epochs?limit=int&offset=int
+
+3. /epochs/<epoch>
+
+4. /epochs/<epoch>/speed
+
+5. /epochs/<epoch>/location
+
+6. /now
+
 # Instructions to Run Containerized Tests
+NEED TO ADD TESTING@DOCKER ENVR
+These steps can only be run after the application is deployed (instructions included in previous section).
+
+1. Run Tests
+-> include BASH docker-compsose run test
+
+2. Verify Results
+
+3. Stop Services
 
 # International Space Station Tracking Data
 
