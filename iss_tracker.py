@@ -1,7 +1,7 @@
 import json
 import xml.etree.ElementTree as ET
 import math
-from datetime import datetime
+from datetime import datetime, timezone
 import os
 import requests
 from typing import List, Dict, Any
@@ -105,7 +105,11 @@ def find_closest_epoch(data: List[Dict[str, Any]], current_time: datetime) -> Di
     Returns:
         Data entry with the closest epoch
     '''
-    return min(data, key=lambda x: abs(datetime.fromisoformat(x['EPOCH'].replace('Z', '+00:00')) - current_time)) #converts to workable format so that calculations can be done
+        # Ensure current_time is offset-aware
+    current_time = current_time.replace(tzinfo=timezone.utc)
+
+    # Find the closest epoch
+    return min(data, key=lambda x: abs(datetime.strptime(x['EPOCH'], "%Y-%jT%H:%M:%S.%f%z") - current_time))
 
 @app.route('/', methods=['GET'])
 def home():
@@ -179,21 +183,21 @@ def get_nearest_epoch():
     '''
     Returns the epoch closest to current time
     '''
-    current_time = datetime.utcnow()
+    # Make current_time offset-aware by adding UTC timezone
+    current_time = datetime.utcnow().replace(tzinfo=timezone.utc)
 
     keys = redis_client.keys()
     if not keys:
         return jsonify({'error': 'No ISS data available'}), 500
+
+    # Find the closest epoch
     closest_epoch = min(keys, key=lambda epoch:
         abs(datetime.fromisoformat(epoch.replace('Z', '+00:00')) - current_time))
+
     data = redis_client.get(closest_epoch)
     if data:
         return jsonify(json.loads(data))
-
-    #find closest epock
-    keys = [key for key in redis_client.keys() if 'Z' in key] #looks for Z character because it's in ISO 8601 format which messes up route
-    data = redis_client.get(closest_epoch)
-    return jsonify(data)
+    return jsonify({'error': 'No data found for the closest epoch'}), 500
 
 def main():
     NASA_URL = "https://nasa-public-data.s3.amazonaws.com/iss-coords/current/ISS_OEM/ISS.OEM_J2K_EPH.xml"
