@@ -75,6 +75,7 @@ def fetch_iss_data(url: str) -> List[Dict[str, Any]]:
                 'VELOCITY': velocity,
                 }))
 
+        return data 
         print(f"Stored {len(data)} state vectors in Redis.")
     except requests.RequestException as e:
         raise Exception(f"Failed to fetch data from NASA: {e}")
