@@ -6,10 +6,12 @@ Short Summary of Repository
 
 Many of the scripts within this repository are interlinked and will be discussed as they are grouped.
 
-## Docker Compose Related Files
-### Dockerfile
-### docker-compose.yml
-### requirements.txt
+### Docker Compose Related Files
+- **Dockerfile**
+
+- **docker-compose.yml**
+
+- **requirements.txt**
 
 ## Main Function and Test Files
 ### iss_tracker.py
