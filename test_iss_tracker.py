@@ -2,7 +2,7 @@ import pytest
 import os
 import json 
 from datetime import datetime
-from iss_tracker import app, fetch_iss_data, calculate_speed, find_closest_epoch
+from iss_tracker import app, fetch_iss_data, calculate_speed, find_closest_epoch, redis_client
 
 @pytest.fixture #makes test client for flask application
 def client():
@@ -40,6 +40,14 @@ def test_file():
     if os.path.exists(test_file):
         os.remove(test_file)
 
+def test_redis_population():
+    NASA_URL = "https://nasa-public-data.s3.amazonaws.com/iss-coords/current/ISS_OEM/ISS.OEM_J2K_EPH.xml"
+    fetch_iss_data(NASA_URL)  # fetch and store data in Redis
+
+    keys = redis_client.keys()
+    print(f"Number of keys in Redis: {len(keys)}")
+    assert len(keys) > 0, "Redis is not populated with ISS data"
+
 def test_fetch_iss_data(): # checks that epoch, position, and velocity are in in the dict returned by fetch_iss_data
     data = fetch_iss_data("https://nasa-public-data.s3.amazonaws.com/iss-coords/current/ISS_OEM/ISS.OEM_J2K_EPH.xml")
     assert isinstance(data, list)
@@ -67,13 +75,13 @@ def test_home_route(client):
     assert 'endpoints' in data
 
 def test_epochs_route(client):
-    # Without parameters
+    #without parameters
     response = client.get('/epochs')
     assert response.status_code == 200
     data = json.loads(response.data)
     assert isinstance(data, list)
 
-    # With parameters
+    #with parameters
     response = client.get('/epochs?limit=2&offset=0')
     assert response.status_code == 200
     data = json.loads(response.data)
@@ -99,18 +107,37 @@ def test_epoch_speed_route(client):
         data = json.loads(response.data)
         assert 'speed' in data
 
-def test_now_route(client):
-    response = client.get('/now')
+def test_epoch_location_route(client):
+    #fetch all epochs to get a valid epoch
+    response = client.get('/epochs')
     assert response.status_code == 200
-    data = json.loads(response.data)
-    assert 'EPOCH' in data
+    epochs = json.loads(response.data)
+
+    if epochs:
+        #use the first epoch for testing
+        epoch = epochs[0]['EPOCH']
+        response = client.get(f'/epochs/{epoch}/location')
+        assert response.status_code == 200
+
+        #parse response data
+        data = json.loads(response.data)
+        assert 'latitude' in data
+        assert 'longitude' in data
+        assert 'altitude' in data
+        assert 'geoposition' in data
+        assert isinstance(data['latitude'], float)
+        assert isinstance(data['longitude'], float)
+        assert isinstance(data['altitude'], float)
+        assert isinstance(data['geoposition'], str)
+    else:
+        pytest.skip("No epochs available to test /epochs/<epoch>/location route.")
 
 def test_error_handling(client):
-    # Invalid epoch
+    #invalid epoch
     response = client.get('/epochs/invalid_epoch')
     assert response.status_code == 404
 
-    # Invalid speed calculation
+    #invalid speed calculation
     response = client.get('/epochs/invalid_epoch/speed')
     assert response.status_code == 404
 
