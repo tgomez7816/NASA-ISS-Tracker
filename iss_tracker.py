@@ -1,3 +1,4 @@
+import json
 import xml.etree.ElementTree as ET
 import math
 from datetime import datetime
@@ -68,7 +69,11 @@ def fetch_iss_data(url: str) -> List[Dict[str, Any]]:
             })
             
             #store each state vector in Redis using epoch as key
-            redis_client.set(epoch, state_vector)
+            redis_client.set(epoch, json.dumps({
+                'EPOCH': epoch,
+                'POSITION': position,
+                'VELOCITY': velocity,
+                }))
 
         print(f"Stored {len(data)} state vectors in Redis.")
     except requests.RequestException as e:
@@ -99,8 +104,7 @@ def find_closest_epoch(data: List[Dict[str, Any]], current_time: datetime) -> Di
     Returns:
         Data entry with the closest epoch
     '''
-    return min(data, 
-               key=lambda x: abs(datetime.fromisoformat(x['EPOCH'].replace('Z', '+00:00')) - current_time)) #converts to workable format so that calculations can be done
+    return min(data, key=lambda x: abs(datetime.fromisoformat(x['EPOCH'].replace('Z', '+00:00')) - current_time)) #converts to workable format so that calculations can be done
 
 @app.route('/', methods=['GET'])
 def home():
@@ -130,6 +134,9 @@ def get_epochs():
     #get all epochs from Redis
     keys = sorted(redis_client.keys()) #sorts by ascending order
 
+    if not keys:
+        return jsonify([])
+
     #return parts within limit, no limit means all epochs
     if limit is not None:
         keys = keys[offset:offset + limit]
@@ -149,7 +156,7 @@ def get_epoch(epoch):
     #looking for epoch that matches current time
     data = redis_client.get(epoch)
     if data:
-        return jsonify(data)
+        return jsonify(json.loads(data))
     return jsonify({'error': 'Epoch not found'}), 404 #error when no epoch is found
 
 @app.route('/epochs/<epoch>/speed', methods=['GET'])
@@ -176,6 +183,11 @@ def get_nearest_epoch():
     keys = redis_client.keys()
     if not keys:
         return jsonify({'error': 'No ISS data available'}), 500
+    closest_epoch = min(keys, key=lambda epoch:
+        abs(datetime.fromisoformat(epoch.replace('Z', '+00:00')) - current_time))
+    data = redis_client.get(closest_epoch)
+    if data:
+        return jsonify(json.loads(data))
 
     #find closest epock
     keys = [key for key in redis_client.keys() if 'Z' in key] #looks for Z character because it's in ISO 8601 format which messes up route
