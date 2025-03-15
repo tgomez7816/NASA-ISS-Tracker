@@ -70,7 +70,7 @@ curl curl http://localhost:5000/
 The result should be the API description.
 
 ## 4. Stop Services
-To stop the services, in the terminal where the `docker-compose up` if running use:
+To stop the services, in the terminal where the `docker-compose up` is running use:
 ```bash
 docker-compose down
 ```
@@ -78,16 +78,60 @@ docker-compose down
 # Instructions to Curl all Routes
 
 1. **`/epochs`**
+Using GET method, this route returns the entire data set. This can be achieved by running:
 
-2. **'/epochs?limit=int&offset=int`**
+```bash
+curl http://localhost:5000/epochs
+```
+
+Expected Output: JSON array of all epochs with their respective state vectors.
+
+2. **`/epochs?limit=int&offset=int`**
+Using GET method, this route returns a modified list of epochs given search parameters. This can be achieved by running:
+```bash
+curl "http://localhost:5000/epochs?limit=5&offset=2"
+```
+
+To make your seach more specific you can edit the numbers in the command.
+
+`limit=` sets the maximum number of epochs to return.
+
+`offset=` determines the number of epochs to skip before starting to return results 
+
+Expected Output: JSON array of epochs starting from the offset and limited to the limit.
 
 3. **`/epochs/<epoch>`**
+Using GET method, this route returns state vectors for a specific epoch. This can be achieved by running:
+```bash
+curl http://localhost:5000/epochs/2025-02-21T12:00:00.000Z
+```
+
+Expected Output: JSON containing the state vector for the specified epoch.
 
 4. **`/epochs/<epoch>/speed`**
+Using GET method, this route returns the instantaneous speed of a specific epoch. This can be achieved by running:
+```bash
+curl http://localhost:5000/epochs/2025-02-21T12:00:00.000Z/speed
+```
+
+Expected output: JSON containing speed calculation
 
 5. **`/epochs/<epoch>/location`**
+Using GET method, this route returns the latitude, longitude, altitude, and geoposition of a specific epoch. This can be achieved by running:
+```bash
+curl http://localhost:5000/epochs/2025-02-21T12:00:00.000Z/location
+```
+
+Expected output: JSON containing, latitude (deg), longitude (deg), altitude (km), and geoposition.
 
 6. **`/now`**
+Using GET method, this route returns instantaneous speed, latitude, longitude, altitude, and geoposition for the epoch closest to the current time. This can be achieved by running:
+```bash
+curl http://localhost:5000/now
+```
+
+Expected Output: JSON containing latitude (deg), longitude (deg), altitude
+(km), geoposition, speed (km/s), and the nearest epoch.
 
 # Instructions to Run Containerized Tests
 
