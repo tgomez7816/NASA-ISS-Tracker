@@ -78,6 +78,7 @@ docker-compose down
 # Instructions to Curl all Routes
 
 1. **`/epochs`**
+
 Using GET method, this route returns the entire data set. This can be achieved by running:
 
 ```bash
@@ -87,6 +88,7 @@ curl http://localhost:5000/epochs
 Expected Output: JSON array of all epochs with their respective state vectors.
 
 2. **`/epochs?limit=int&offset=int`**
+
 Using GET method, this route returns a modified list of epochs given search parameters. This can be achieved by running:
 ```bash
 curl "http://localhost:5000/epochs?limit=5&offset=2"
@@ -101,6 +103,7 @@ To make your seach more specific you can edit the numbers in the command.
 Expected Output: JSON array of epochs starting from the offset and limited to the limit.
 
 3. **`/epochs/<epoch>`**
+
 Using GET method, this route returns state vectors for a specific epoch. This can be achieved by running:
 ```bash
 curl http://localhost:5000/epochs/2025-02-21T12:00:00.000Z
@@ -109,6 +112,7 @@ curl http://localhost:5000/epochs/2025-02-21T12:00:00.000Z
 Expected Output: JSON containing the state vector for the specified epoch.
 
 4. **`/epochs/<epoch>/speed`**
+
 Using GET method, this route returns the instantaneous speed of a specific epoch. This can be achieved by running:
 ```bash
 curl http://localhost:5000/epochs/2025-02-21T12:00:00.000Z/speed
@@ -117,6 +121,7 @@ curl http://localhost:5000/epochs/2025-02-21T12:00:00.000Z/speed
 Expected output: JSON containing speed calculation
 
 5. **`/epochs/<epoch>/location`**
+
 Using GET method, this route returns the latitude, longitude, altitude, and geoposition of a specific epoch. This can be achieved by running:
 ```bash
 curl http://localhost:5000/epochs/2025-02-21T12:00:00.000Z/location
@@ -125,6 +130,7 @@ curl http://localhost:5000/epochs/2025-02-21T12:00:00.000Z/location
 Expected output: JSON containing, latitude (deg), longitude (deg), altitude (km), and geoposition.
 
 6. **`/now`**
+
 Using GET method, this route returns instantaneous speed, latitude, longitude, altitude, and geoposition for the epoch closest to the current time. This can be achieved by running:
 ```bash
 curl http://localhost:5000/now
@@ -138,11 +144,24 @@ Expected Output: JSON containing latitude (deg), longitude (deg), altitude
 These steps can only be run after the application is deployed (instructions included in previous section).
 
 1. Run Tests
--> include BASH docker-compsose run test
+
+In the terminal run:
+```bash
+docker-compose run test
+```
+This will execute pytest with the corresponding test file within the container.
 
 2. Verify Results
 
+After running the above command, you should see pytest running with a line `test session starts` visible to you. If any tests fail, the output will include information about the failed tests.
+
 3. Stop Services
+
+After the tests are complete, you can stop the services using:
+```bash
+docker-compose down
+```
+
 
 # International Space Station Tracking Data
 
