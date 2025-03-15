@@ -30,30 +30,64 @@ The endpoint routes that are also included in this document will be discussed wi
 - **`test_iss_tracker.py`**
     This file includes all of the unit tests to evaluate the functionality of each function and route availible in the iss_tracker.py script. It also includes test related to general Redis connection (which are the first tests conducted). If this test fails other Redis dependent tests, such as any route test will fail.
 
+# Getting Started
+
+Follow these steps to prepare to run the application using Docker-Compose:
+
+## 1. Clone the Repository
+
+First, clone the repository to your local machine:
+
+```bash
+git clone git@github.com:tgomez7816/NASA-ISS-Tracker.git
+cd NASA-ISS_Tracker
+```
+
 # Instructions to Deploy Application using Docker-Compose
-GENERAL INSTRUCTIONS NEED SPECIFICATION
 
-1. Build Docker Images
+## 1. Build Docker Images
 
-2. Start It Up
+Run the following command in your terminal to build images for the services provided in the application:
+```bash
+docker-compose build
+```
 
-3. Verify Deployment
+## 2. Start It Up
+Run the following command in your terminal to start up the application:
+```bash
+docker-compse up
+```
+This will start the Flask app and Redis service together. The Flask application will be accessible through:
+```bash
+http://localhost:5000/
+```
 
-4. Stop Services
+## 3. Verify Deployment
+These instructions will curl to test the deployment of the API. You can verify that the API is running by:
+```bash
+curl curl http://localhost:5000/
+```
+The result should be the API description.
+
+## 4. Stop Services
+To stop the services, in the terminal where the `docker-compose up` if running use:
+```bash
+docker-compose down
+```
 
 # Instructions to Curl all Routes
 
-1. /epochs
+1. **`/epochs`**
 
-2. /epochs?limit=int&offset=int
+2. **'/epochs?limit=int&offset=int`**
 
-3. /epochs/<epoch>
+3. **`/epochs/<epoch>`**
 
-4. /epochs/<epoch>/speed
+4. **`/epochs/<epoch>/speed`**
 
-5. /epochs/<epoch>/location
+5. **`/epochs/<epoch>/location`**
 
-6. /now
+6. **`/now`**
 
 # Instructions to Run Containerized Tests
 
