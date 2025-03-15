@@ -9,7 +9,7 @@ Many of the scripts within this repository are interlinked and will be discussed
 ### Docker Compose Related Files
 - **`Dockerfile`**: this file creates an image for the application using the working directory and the necessary dependencies listed in the `requirements.txt` file.
 
-- **`docker-compose.yml`**
+- **`docker-compose.yml`**: this file defines the multi-container Docker application with three services; iss_tracker, redis, and test.
 
 - **`requirements.txt`**: this file contains all the required dependencies need to create a suitable Docker environment for the application. 
 
@@ -18,7 +18,14 @@ Many of the scripts within this repository are interlinked and will be discussed
     This script includes multiple functions and routes that are used to analyze/navigate the ISS data.
 
     Functions included:
-         1. 
+
+1. `fetch_iss_data`: this function takes the data provided from the NASA url and parses the xml data. Additionally this function is responsible for storing the data is Redis.
+
+2. `calculate_speed`: this function uses the general vector magnitude formula to calulate the speed of the ISS.
+
+3. `fine_closest_epoch`: this function finds the closest timestamp (EPOCH) to the current time the application is run.
+
+The endpoint routes that are also included in this document will be discussed with there implementation in the "Instructions to Curl all Routes" section.
 
 - **`test_iss_tracker.py`**
     This file includes all of the unit tests to evaluate the functionality of each function and route availible in the iss_tracker.py script. It also includes test related to general Redis connection (which are the first tests conducted). If this test fails other Redis dependent tests, such as any route test will fail.
@@ -49,7 +56,7 @@ GENERAL INSTRUCTIONS NEED SPECIFICATION
 6. /now
 
 # Instructions to Run Containerized Tests
-NEED TO ADD TESTING@DOCKER ENVR
+
 These steps can only be run after the application is deployed (instructions included in previous section).
 
 1. Run Tests
