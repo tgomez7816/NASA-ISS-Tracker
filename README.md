@@ -65,7 +65,7 @@ http://localhost:5000/
 ## 3. Verify Deployment
 These instructions will curl to test the deployment of the API. You can verify that the API is running by:
 ```bash
-curl curl http://localhost:5000/
+curl http://localhost:5000/
 ```
 The result should be the API description.
 
