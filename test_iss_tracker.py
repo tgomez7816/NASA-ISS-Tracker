@@ -42,13 +42,13 @@ def test_file():
 
 def test_redis_population():
     NASA_URL = "https://nasa-public-data.s3.amazonaws.com/iss-coords/current/ISS_OEM/ISS.OEM_J2K_EPH.xml"
-    fetch_iss_data(NASA_URL)  # fetch and store data in Redis
+    fetch_iss_data(NASA_URL)  #fetch and store data in Redis
 
     keys = redis_client.keys()
     print(f"Number of keys in Redis: {len(keys)}")
     assert len(keys) > 0, "Redis is not populated with ISS data"
 
-def test_fetch_iss_data(): # checks that epoch, position, and velocity are in in the dict returned by fetch_iss_data
+def test_fetch_iss_data(): #checks that epoch, position, and velocity are in in the dict returned by fetch_iss_data
     data = fetch_iss_data("https://nasa-public-data.s3.amazonaws.com/iss-coords/current/ISS_OEM/ISS.OEM_J2K_EPH.xml")
     assert isinstance(data, list)
     assert len(data) > 0
@@ -56,7 +56,7 @@ def test_fetch_iss_data(): # checks that epoch, position, and velocity are in in
     assert 'POSITION' in data[0]
     assert 'VELOCITY' in data[0]
 
-def test_calculate_speed(): # tests calculate speed using a known vector with a ckecked magnitude
+def test_calculate_speed(): #tests calculate speed using a known vector with a ckecked magnitude
     velocity = {'X_DOT': 1.0, 'Y_DOT': 2.0, 'Z_DOT': 3.0}
     speed = calculate_speed(velocity)
     assert pytest.approx(speed, 0.0001) == 3.7416573867739413
