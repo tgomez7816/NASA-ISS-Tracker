@@ -11,12 +11,12 @@ import math
 from math import atan2, sqrt, degrees
 
 #Redis connection
-redis_host = os.getenv('REDIS_HOST', 'localhost')
-redis_port = int(os.getenv('REDIS_PORT', 6379))    # port
+redis_host = os.getenv('REDIS_HOST', 'localhost') #set to default to localhost deciding host address of server
+redis_port = int(os.getenv('REDIS_PORT', 6379))    #port
 try:
     redis_client = redis.StrictRedis(host=redis_host, port=redis_port, decode_responses=True)
-    redis_client.ping()  # test connection
-except redis.exceptions.ConnectionError as e:
+    redis_client.ping()  #test connection, responds True if working
+except redis.exceptions.ConnectionError as e: #exception handling
     raise Exception(f"Failed to connect to Redis: {e}")
 
 app = Flask(__name__)
@@ -80,7 +80,7 @@ def fetch_iss_data(url: str) -> List[Dict[str, Any]]:
         print(f"Stored {len(data)} state vectors in Redis.")
         return data
 
-    except requests.RequestException as e:
+    except requests.RequestException as e: #error handling
         raise Exception(f"Failed to fetch data from NASA: {e}")
     except ET.ParseError as e:
         raise Exception(f"Failed in XML data: {e}")
@@ -108,10 +108,10 @@ def find_closest_epoch(data: List[Dict[str, Any]], current_time: datetime) -> Di
     Returns:
         Data entry with the closest epoch
     '''
-    #current_time is offset-aware -> include further explanation in write up
+    #current_time is offset-aware
     current_time = current_time.replace(tzinfo=timezone.utc)
 
-    # find the closest epoch
+    #find the closest epoch converts so that subtraction can occur between current_time and epoch
     return min(data, key=lambda x: abs(datetime.strptime(x['EPOCH'], "%Y-%jT%H:%M:%S.%f%z") - current_time))
 
 @app.route('/', methods=['GET'])
@@ -143,7 +143,7 @@ def get_epochs():
     keys = sorted(redis_client.keys()) #sorts by ascending order
 
     if not keys:
-        return jsonify([])
+        return jsonify([]) #if the Redis is empty it returns an empty JSON object
 
     #return parts within limit, no limit means all epochs
     if limit is not None:
@@ -153,7 +153,7 @@ def get_epochs():
 
     #get data for each key
     data = [json.loads(redis_client.get(key)) for key in keys]
-    return jsonify(data)
+    return jsonify(data) #returns JSON with the data
 
 
 @app.route('/epochs/<epoch>', methods=['GET'])
@@ -164,7 +164,7 @@ def get_epoch(epoch):
     #looking for epoch that matches current time
     data = redis_client.get(epoch)
     if data:
-        return jsonify(json.loads(data))
+        return jsonify(json.loads(data)) 
     return jsonify({'error': 'Epoch not found'}), 404 #error when no epoch is found
 
 @app.route('/epochs/<epoch>/speed', methods=['GET'])
@@ -216,17 +216,17 @@ def get_nearest_epoch_location():
         z = position['Z']
 
         #calculate latitude, longitude, and altitude
-        earth_radius = 6371  # radius in km
-        latitude = degrees(atan2(z, sqrt(x**2 + y**2)))  # degrees
+        earth_radius = 6371  #km
+        latitude = degrees(atan2(z, sqrt(x**2 + y**2)))  #degrees
         longitude = degrees(atan2(y, x))
-        altitude = sqrt(x**2 + y**2 + z**2) - earth_radius  # altitude
+        altitude = sqrt(x**2 + y**2 + z**2) - earth_radius  #km
 
-        # GeoPy to get the geoposition
+        #GeoPy gets geoposition
         geolocator = Nominatim(user_agent="iss_tracker")
         location = geolocator.reverse((latitude, longitude), language='en')
         geoposition = location.address if location else "Unknown location"
 
-        return jsonify({
+        return jsonify({ #returns JSON object with the "now" information
             'latitude': latitude,
             'longitude': longitude,
             'altitude': altitude,
@@ -248,23 +248,24 @@ def get_epoch_location(epoch):
         return jsonify({'error': 'Epoch not found'}), 404
 
     try:
-        # parse the data
+        #parse the data
         data = json.loads(data)
         position = data['POSITION']
         x = position['X']
         y = position['Y']
         z = position['Z']
 
-        # calculate latitude, longitude, and altitude
+        #calculate latitude, longitude, and altitude
         earth_radius = 6371  
         latitude = degrees(atan2(z, sqrt(x**2 + y**2)))  
         longitude = degrees(atan2(y, x))
         altitude = sqrt(x**2 + y**2 + z**2) - earth_radius
 
+        #Geopy
         geolocator = Nominatim(user_agent="iss_tracker")
         location = geolocator.reverse((latitude, longitude), language='en')
 
-        return jsonify({
+        return jsonify({ #JSON object with geolocation info
             'latitude': latitude,
             'longitude': longitude,
             'altitude': altitude,
@@ -280,7 +281,7 @@ def main():
 
     try:
         print("Fetching ISS data from NASA...")
-        fetch_iss_data(NASA_URL)  # get data and store data in Redis
+        fetch_iss_data(NASA_URL)  #get data and store data in Redis
         print("ISS data successfully loaded into Redis.")
         app.run(debug=True, host='0.0.0.0', port=5000)
     except Exception as e:
