@@ -170,6 +170,4 @@ The following link is the xml data that is hard coded into the iss_tracker.py fi
 For further exploration of ISS data visit: https://spotthestation.nasa.gov/trajectory_data.cfm
 
 # Software Diagram
-
-
-
+![Screenshot 2025-03-14 200850](https://github.com/user-attachments/assets/ee19d63e-3479-490e-b05a-678ac6904a0c)
