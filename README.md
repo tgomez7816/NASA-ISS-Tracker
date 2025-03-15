@@ -1,4 +1,4 @@
-# International Space Station Tracker Data Analysis 
+# International Space Station Tracker Application 
 
 This directory contains a Python scripts that processes data from NASA's Spot the Station website containing vector information about the position and velocity of the International Space Station. The script includes functions to analyze the data, such as, parse the XML file, calculate the speed of the ISS, and find the closest timestamp (EPOCH) to a given time. The code implements a Flask-based REST API with dedicated routes that allow you to navigate the data easily.
 
